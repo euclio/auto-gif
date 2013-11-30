@@ -2,7 +2,8 @@ import os
 import praw
 
 r = praw.Reddit('Auto-gif: Attempts to respond to comments with relevant '
-        'reaction gifs')
+        		'reaction gifs')
+
 
 def login():
     try:
