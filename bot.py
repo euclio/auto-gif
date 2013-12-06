@@ -1,8 +1,7 @@
 import os
 import praw
 import requests
-import sys
-import codecs
+import db_interface
 from bs4 import BeautifulSoup
 
 r = praw.Reddit('Auto-gif: Attempts to respond to comments with relevant '
@@ -35,8 +34,18 @@ def scrape():
     soup = BeautifulSoup(content)
     posts = soup.find_all(class_="post")
     for post in posts:
-        date = post.find(class_="post-date")
-        print date
-
+        post_url = post.find(class_="post-author").input["value"]
+        image_url = post.find(class_="middle").find(class_="entry").a["href"]
+        title = post.find(class_="middle").find(class_="title").a["title"]
+        tags = post.find(class_="post-category").text[6:].split(', ')
+        print title
+        print post_url
+        print image_url
+        print tags
+        db_interface.store_image(image_url,post_url,title,tags)
+        # see if i can retrieve
+        print db_interface.get_images_for_tag("wrong")
+        
 if __name__ == '__main__':
     scrape()
+
