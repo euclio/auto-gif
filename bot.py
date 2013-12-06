@@ -1,5 +1,9 @@
 import os
 import praw
+import requests
+import sys
+import codecs
+from bs4 import BeautifulSoup
 
 r = praw.Reddit('Auto-gif: Attempts to respond to comments with relevant '
                 'reaction gifs')
@@ -13,11 +17,26 @@ def login():
     except KeyError:
         r.login()
 
-if __name__ == '__main__':
-    login()
 
+def reddit_test():
+    login()
     reactiongifs = r.get_subreddit('reactiongifs')
     top = reactiongifs.get_top(limit=1).next()
     comments = top.comments
     print top
     print comments[0]
+
+
+def scrape():
+    page = 1
+    url_prefix = "http://www.reactiongifs.com/page/"
+    response = requests.get(url_prefix + str(page))
+    content = response.content
+    soup = BeautifulSoup(content)
+    posts = soup.find_all(class_="post")
+    for post in posts:
+        date = post.find(class_="post-date")
+        print date
+
+if __name__ == '__main__':
+    scrape()
