@@ -4,7 +4,7 @@ import requests
 import db_interface
 from bs4 import BeautifulSoup
 
-r = praw.Reddit('Auto-gif: Attempts to respond to comments with relevant '
+r = praw.Reddit(user_agent='Auto-gif: Attempts to respond to comments with relevant '
                 'reaction gifs')
 
 
