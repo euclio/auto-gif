@@ -42,10 +42,11 @@ def scrape():
         print post_url
         print image_url
         print tags
-        db_interface.store_image(image_url,post_url,title,tags)
-        # see if i can retrieve
-        print db_interface.get_images_for_tag("wrong")
-        
-if __name__ == '__main__':
-    scrape()
+        db_interface.store_image(image_url, post_url, title, tags)
 
+if __name__ == '__main__':
+    # only need to scrape once
+    scrape()
+    # see if i can retrieve
+    result = db_interface.get_images_for_tag("mad")
+    print result

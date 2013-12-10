@@ -1,4 +1,4 @@
-from pony.orm import Database, Required, Set, commit, select
+from pony.orm import Database, Required, Set, commit, db_session
 
 db = Database('sqlite', 'database.sqlite', create_db=True)
 
@@ -15,6 +15,7 @@ class ImageTag(db.Entity):
     image = Required(Image)
 
 
+@db_session
 def store_image(image_url, post_url, title, tags):
     image = Image(image_url=image_url, post_url=post_url,
                   title=title)
@@ -23,7 +24,10 @@ def store_image(image_url, post_url, title, tags):
     commit()
 
 
+@db_session
 def get_images_for_tag(tag):
-    return select(i for i in Image if tag in i.tags)
+    result = db.select("* from ImageTag where tag = $query_tag",
+                       {"query_tag": tag})
+    return result
 
 db.generate_mapping(create_tables=True)
