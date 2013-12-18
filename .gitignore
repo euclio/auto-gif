@@ -1,5 +1,9 @@
 *.py[cod]
 
+# gensim files
+*.dmp
+*.mm
+
 # database
 *.sqlite
 
