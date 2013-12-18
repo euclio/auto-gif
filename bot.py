@@ -24,7 +24,7 @@ def reddit_threads():
     login()
     reactiongifs = r.get_subreddit('reactiongifs')
     threads = []
-    for story in reactiongifs.get_top(limit=10):
+    for story in reactiongifs.get_top(limit=1):
         comments = story.comments
         print story
         print len(comments)
@@ -40,7 +40,7 @@ def reddit_topics():
     for thread in reddit_threads():
         text = ''
         for comment in thread:
-            text += ' ' + comment.body
+            text += ' ' + comment[0]
         threads.append([word for word in text.lower().split()])
     print threads
     all_tokens = []
@@ -49,18 +49,17 @@ def reddit_topics():
     unique = set(word for word in set(all_tokens) if all_tokens.count(word) == 1)
     common = set(['for', 'a', 'of', 'the', 'and', 'to', 'in', 'http', 'gif',
                   'mrw'])
-    threads = [[word for word in thread if word not in unique + common]
+    threads = [[word for word in thread if word not in unique | common]
                for thread in threads]
     print threads
     dictionary = corpora.Dictionary(threads)
     print dictionary
     dictionary.save('/tmp/top10.dict')
-    corpus = [dictionary.doc2bow(text) for thread in threads]
+    corpus = [dictionary.doc2bow(thread) for thread in threads]
     corpora.MmCorpus.serialize('/tmp/top10.mm', corpus)
     print corpus
     model = models.ldamodel.LdaModel(corpus, id2word=dictionary, num_topics=50)
     print model
-    return None
 
 
 # Get the text and id of a comment and its descendants, taking the first
@@ -91,4 +90,5 @@ def scrape():
 
 
 if __name__ == '__main__':
+    #scrape()
     reddit_topics()
