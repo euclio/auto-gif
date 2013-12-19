@@ -4,6 +4,7 @@ import requests
 import db_interface
 from bs4 import BeautifulSoup
 from gensim import corpora, models, similarities
+from markdown import markdown
 
 r = praw.Reddit(user_agent='Auto-gif: Attempts to respond to comments with relevant '
                 'reaction gifs')
@@ -63,13 +64,17 @@ def reddit_topics():
 # Get the text and id of a comment and its descendants, taking the first
 # reply at each level.
 def comment_descendants(comment):
-    descendants = [comment.body, comment.name]
+    descendants = [strip_markdown(comment.body), comment.name]
     while (len(comment.replies) > 0
            and type(comment.replies[0]) is praw.objects.Comment
            and comment.replies[0].ups - comment.replies[0].downs > 1):
         comment = comment.replies[0]
-        descendants.append((comment.body, comment.name))
+        descendants.append((strip_markdown(comment.body), comment.name))
     return descendants
+
+def strip_markdown(text):
+    html = markdown(text)
+    return ''.join(BeautifulSoup(html).findAll(text=True))
 
 
 def scrape():
