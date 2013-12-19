@@ -1,6 +1,6 @@
 import os
 import re
-import sleep
+import time
 
 import praw
 import requests
