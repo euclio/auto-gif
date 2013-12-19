@@ -12,6 +12,11 @@ r = praw.Reddit(user_agent='Auto-gif: Attempts to respond to comments with relev
 
 
 def login():
+    """Log in to reddit.
+
+    Attempts to use the BOT_USERNAME and BOT_PASSWORD environment variables to
+    log in. If either variable doesn't exist, then the function will prompt for
+    a username and password."""
     try:
         username = os.environ['BOT_USERNAME']
         password = os.environ['BOT_PASSWORD']
@@ -20,9 +25,11 @@ def login():
         r.login()
 
 
-# Get a list of threads from the top stories on reddit.
-# Each thread is a list of (body, name) pairs.
 def reddit_threads():
+    """Get a list of threads from the top stories on reddit.
+
+    Each thread is a list of (body, name) pairs.
+    """
     login()
     reactiongifs = r.get_subreddit('reactiongifs')
     threads = []
@@ -35,8 +42,8 @@ def reddit_threads():
     return threads
 
 
-# Get a list of topics from reddit comments using LDA
 def reddit_topics():
+    """Get a list of topics from reddit comments using LDA."""
     threads = []
     for thread in reddit_threads():
         text = ''
@@ -64,9 +71,9 @@ def reddit_topics():
         print topic
 
 
-# Get the text and id of a comment and its descendants, taking the first
-# reply at each level.
 def comment_descendants(comment):
+    """Get the text and id of a comment and its descendants, taking the first
+    reply at each level."""
     descendants = [(strip_markdown(comment.body), comment.name)]
     while (len(comment.replies) > 0
            and type(comment.replies[0]) is praw.objects.Comment
@@ -75,12 +82,16 @@ def comment_descendants(comment):
         descendants.append((strip_markdown(comment.body), comment.name))
     return descendants
 
+
 def strip_markdown(text):
+    """Remove markdown formatting on reddit comments."""
     html = markdown(text)
     return ''.join(BeautifulSoup(html).findAll(text=True))
 
 
 def scrape():
+    """Scrapes gifs and tags from reactiongifs.com and stores them in
+    database."""
     page = 1
     url_prefix = "http://www.reactiongifs.com/page/"
     response = requests.get(url_prefix + str(page))
