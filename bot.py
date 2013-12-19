@@ -9,6 +9,8 @@ from bs4 import BeautifulSoup
 from gensim import corpora, models, similarities
 from stemming.porter2 import stem
 from markdown import markdown
+from datetime import datetime, timedelta
+from itertools import chain
 
 r = praw.Reddit(user_agent='Auto-gif: Attempts to respond to comments with relevant '
                 'reaction gifs')
@@ -28,51 +30,68 @@ def login():
         r.login()
 
 
-def reddit_threads():
+def days_old(story):
+    '''Return true if story is at least two days old.'''
+    return datetime.now() - datetime.fromtimestamp(story.created) > timedelta(days=2)
+
+
+def reddit_threads(number):
     """Get a list of threads from the top stories on reddit.
 
     Each thread is a list of (body, name) pairs.
     """
     login()
-    reactiongifs = r.get_subreddit('funny')
-    threads = []
-    for story in reactiongifs.get_top_from_all(limit=10):
+    subr = r.get_subreddit('funny')
+    all_threads = []
+    for story in filter(days_old, subr.get_top_from_all(limit=number)):
         comments = story.comments
         print story
         print len(comments)
-        threads += [comment_descendants(comment) for comment in comments
-                    if type(comment) is praw.objects.Comment]
-    return threads
+        story_threads = [comment_descendants(comment) for comment in comments if type(comment) is praw.objects.Comment]
+        all_threads = chain(all_threads, story_threads)
+    return all_threads
 
 
-def reddit_topics():
-    """Get a list of topics from reddit comments using LDA."""
-    threads = []
-    for thread in reddit_threads():
+def reddit_corpus(name, input_threads):
+    """Save a corpus of reddit comments."""
+
+    def thread_words(thread):
         text = ''
         for comment in thread:
             # Remove punctuation
-            comment = re.sub('[!.:?,;"\']', '', comment[0])
+            comment = re.sub('[!.:?,;"]', '', comment[0])
             text += comment
-        threads.append([stem(word) for word in text.lower().split()])
-    all_tokens = []
-    print 'Number of threads is', len(threads)
-    for thread in threads:
-        all_tokens += thread
-    unique = set(word for word in set(all_tokens) if all_tokens.count(word) == 1)
-    common = set()
+        return [stem(word) for word in text.lower().split()]
+
+    threads = [thread_words(thread) for thread in input_threads]
+    dictionary = corpora.Dictionary(threads)
+    unique_id = [word for word, count in dictionary.dfs.iteritems() if count == 1]
+    common_id = []
     with open('common_words.txt') as f:
-        common.update(stem(line.rstrip()) for line in f.readlines())
-    documents = [[word for word in thread if word not in unique | common]
-               for thread in threads]
-    dictionary = corpora.Dictionary(documents)
-    dictionary.save('bot.dict')
-    corpus = [dictionary.doc2bow(document) for document in documents]
-    corpora.MmCorpus.serialize('bot.mm', corpus)
-    model = models.ldamodel.LdaModel(corpus=corpus, id2word=dictionary, num_topics=50)
+        for line in f.readlines():
+            word = stem(line.rstrip())
+            if word in dictionary.token2id:
+                common_id.append(dictionary.token2id[word])
+    stopword_id = unique_id + common_id
+    print 'Number of words thrown out:', len(stopword_id)
+    dictionary.filter_tokens(stopword_id)
+    dictionary.compactify()
+    dictionary.save(name + '.dict')
+    corpus = (dictionary.doc2bow(thread) for thread in threads)
+    corpora.MmCorpus.serialize(name + '.mm', corpus)
+
+
+def LDA_model(name, number):
+    """Create an LDA model from saved corpus and dictionary."""
+    corpus = corpora.MmCorpus(name + '.mm')
+    print corpus
+    dictionary = corpora.Dictionary.load(name + '.dict')
+    print dictionary
+    model = models.ldamodel.LdaModel(corpus=corpus, id2word=dictionary, num_topics=number, passes = 10)
     print model
-    for topic in model.show_topics():
+    for topic in model.show_topics(topics=-1):
         print topic
+    return model
 
 
 def comment_descendants(comment):
@@ -114,4 +133,7 @@ def scrape():
 
 if __name__ == '__main__':
     #scrape()
-    reddit_topics()
+    number = 100
+    name = 'top'+ str(number)
+    reddit_corpus(name, reddit_threads(number))
+    LDA_model(name, 200)
