@@ -1,4 +1,6 @@
 import os
+import re
+
 import praw
 import requests
 import db_interface
@@ -48,8 +50,9 @@ def reddit_topics():
     for thread in reddit_threads():
         text = ''
         for comment in thread:
-            removed_punctuation = "".join(c for c in comment[0] if c not in ('!','.',':','?',',',';'))
-            text += ' ' + removed_punctuation
+            # Remove punctuation
+            comment = re.sub('[!.:?,;"\']', '', comment[0])
+            text += comment
         threads.append([stem(word) for word in text.lower().split()])
     all_tokens = []
     print 'Number of threads is', len(threads)
