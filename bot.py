@@ -4,6 +4,7 @@ import requests
 import db_interface
 from bs4 import BeautifulSoup
 from gensim import corpora, models, similarities
+from stemming.porter2 import stem
 
 r = praw.Reddit(user_agent='Auto-gif: Attempts to respond to comments with relevant '
                 'reaction gifs')
@@ -41,7 +42,7 @@ def reddit_topics():
         text = ''
         for comment in thread:
             text += ' ' + comment[0]
-        threads.append([word for word in text.lower().split()])
+        threads.append([stem(word) for word in text.lower().split()])
     all_tokens = []
     for thread in threads:
         all_tokens += thread
