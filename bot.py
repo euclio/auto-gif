@@ -32,7 +32,6 @@ def reddit_threads():
         print len(comments)
         threads += [comment_descendants(comment) for comment in comments
                     if type(comment) is praw.objects.Comment]
-    print 'Number of threads is ' + str(len(threads))
     return threads
 
 
@@ -43,12 +42,15 @@ def reddit_topics():
         text = ''
         for comment in thread:
             text += ' ' + comment[0]
-        threads.append([stem(word) for word in text.lower().split()])
+        # don't include short threads
+        if len(text) > 100:
+            threads.append([stem(word) for word in text.lower().split()])
     all_tokens = []
+    print 'Number of threads is', len(threads)
     for thread in threads:
         all_tokens += thread
     unique = set(word for word in set(all_tokens) if all_tokens.count(word) == 1)
-    common_string = "are on his for a of the and to in http gif mrw [deleted] me you i some have that as is"
+    common_string = "are on his for it was when there a this be or your of the and to in http gif mrw [deleted] me you i some have that as is"
     common = set([stem(word) for word in common_string.split()])
     documents = [[word for word in thread if word not in unique | common]
                for thread in threads]
@@ -56,15 +58,16 @@ def reddit_topics():
     dictionary.save('/tmp/top10.dict')
     corpus = [dictionary.doc2bow(document) for document in documents]
     corpora.MmCorpus.serialize('/tmp/top10.mm', corpus)
-    model = models.ldamodel.LdaModel(corpus=corpus, id2word=dictionary, num_topics=10)
+    model = models.ldamodel.LdaModel(corpus=corpus, id2word=dictionary, num_topics=5)
     print model
-    model.print_topics(10)
+    for topic in model.show_topics():
+        print topic
 
 
 # Get the text and id of a comment and its descendants, taking the first
 # reply at each level.
 def comment_descendants(comment):
-    descendants = [strip_markdown(comment.body), comment.name]
+    descendants = [(strip_markdown(comment.body), comment.name)]
     while (len(comment.replies) > 0
            and type(comment.replies[0]) is praw.objects.Comment
            and comment.replies[0].ups - comment.replies[0].downs > 1):
