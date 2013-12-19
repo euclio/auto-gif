@@ -62,7 +62,7 @@ def reddit_topics():
     unique = set(word for word in set(all_tokens) if all_tokens.count(word) == 1)
     common = set()
     with open('common_words.txt') as f:
-        common.update(line for line in f.readlines())
+        common.update(line.rstrip() for line in f.readlines())
     documents = [[word for word in thread if word not in unique | common]
                for thread in threads]
     dictionary = corpora.Dictionary(documents)
@@ -96,7 +96,7 @@ def strip_markdown(text):
 def scrape():
     """Scrapes gifs and tags from reactiongifs.com and stores them in
     database."""
-    for page in range(500):
+    for page in range(245, 500):
         print 'Scraping page', page, '...'
         url_prefix = "http://www.reactiongifs.com/page/"
         response = requests.get(url_prefix + str(page))
