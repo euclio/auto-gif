@@ -34,9 +34,9 @@ def reddit_threads():
     Each thread is a list of (body, name) pairs.
     """
     login()
-    reactiongifs = r.get_subreddit('reactiongifs')
+    reactiongifs = r.get_subreddit('funny')
     threads = []
-    for story in reactiongifs.get_top_from_all(limit=5):
+    for story in reactiongifs.get_top_from_all(limit=10):
         comments = story.comments
         print story
         print len(comments)
@@ -62,14 +62,14 @@ def reddit_topics():
     unique = set(word for word in set(all_tokens) if all_tokens.count(word) == 1)
     common = set()
     with open('common_words.txt') as f:
-        common.update(line.rstrip() for line in f.readlines())
+        common.update(stem(line.rstrip()) for line in f.readlines())
     documents = [[word for word in thread if word not in unique | common]
                for thread in threads]
     dictionary = corpora.Dictionary(documents)
-    dictionary.save('/tmp/top10.dict')
+    dictionary.save('bot.dict')
     corpus = [dictionary.doc2bow(document) for document in documents]
-    corpora.MmCorpus.serialize('/tmp/top10.mm', corpus)
-    model = models.ldamodel.LdaModel(corpus=corpus, id2word=dictionary, num_topics=5)
+    corpora.MmCorpus.serialize('bot.mm', corpus)
+    model = models.ldamodel.LdaModel(corpus=corpus, id2word=dictionary, num_topics=50)
     print model
     for topic in model.show_topics():
         print topic
