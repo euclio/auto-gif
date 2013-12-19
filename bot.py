@@ -48,15 +48,15 @@ def reddit_topics():
     unique = set(word for word in set(all_tokens) if all_tokens.count(word) == 1)
     common = set(['for', 'a', 'of', 'the', 'and', 'to', 'in', 'http', 'gif',
                   'mrw'])
-    threads = [[word for word in thread if word not in unique | common]
+    documents = [[word for word in thread if word not in unique | common]
                for thread in threads]
-    dictionary = corpora.Dictionary(threads)
+    dictionary = corpora.Dictionary(documents)
     dictionary.save('/tmp/top10.dict')
-    corpus = [dictionary.doc2bow(thread) for thread in threads]
+    corpus = [dictionary.doc2bow(document) for document in documents]
     corpora.MmCorpus.serialize('/tmp/top10.mm', corpus)
     model = models.ldamodel.LdaModel(corpus=corpus, id2word=dictionary, num_topics=10)
     print model
-    model.print_topics(50)
+    model.print_topics(10)
 
 
 
