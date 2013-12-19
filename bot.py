@@ -48,8 +48,8 @@ def reddit_topics():
     for thread in threads:
         all_tokens += thread
     unique = set(word for word in set(all_tokens) if all_tokens.count(word) == 1)
-    common = set(['for', 'a', 'of', 'the', 'and', 'to', 'in', 'http', 'gif',
-                  'mrw', '[deleted]'])
+    common_string = "are on his for a of the and to in http gif mrw [deleted] me you i some have that as is"
+    common = set([stem(word) for word in common_string.split()])
     documents = [[word for word in thread if word not in unique | common]
                for thread in threads]
     dictionary = corpora.Dictionary(documents)
@@ -59,7 +59,6 @@ def reddit_topics():
     model = models.ldamodel.LdaModel(corpus=corpus, id2word=dictionary, num_topics=10)
     print model
     model.print_topics(10)
-
 
 
 # Get the text and id of a comment and its descendants, taking the first
