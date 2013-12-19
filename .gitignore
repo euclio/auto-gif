@@ -45,5 +45,7 @@ nosetests.xml
 include/
 
 # windows
-
 Scripts/
+
+# vim
+*.swp
