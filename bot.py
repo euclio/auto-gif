@@ -48,7 +48,7 @@ def reddit_topics():
         all_tokens += thread
     unique = set(word for word in set(all_tokens) if all_tokens.count(word) == 1)
     common = set(['for', 'a', 'of', 'the', 'and', 'to', 'in', 'http', 'gif',
-                  'mrw'])
+                  'mrw', '[deleted]'])
     documents = [[word for word in thread if word not in unique | common]
                for thread in threads]
     dictionary = corpora.Dictionary(documents)
