@@ -56,7 +56,7 @@ def reddit_topics():
     for thread in threads:
         all_tokens += thread
     unique = set(word for word in set(all_tokens) if all_tokens.count(word) == 1)
-    common_string = "are on his we one for it was do not what than with he just has but at an my their own so had when there a this be or your of the and to in http gif mrw [deleted] me you i some have that as is"
+    common_string = "are on his we one for it they like if was do not what than with he just look has don't but at an my their own so had when there a this be or your of the and to in http gif mrw [deleted] me you i some have that as is"
     common = set([stem(word) for word in common_string.split()])
     documents = [[word for word in thread if word not in unique | common]
                for thread in threads]
