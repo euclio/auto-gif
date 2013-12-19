@@ -1,5 +1,6 @@
 import os
 import re
+import sleep
 
 import praw
 import requests
@@ -95,18 +96,20 @@ def strip_markdown(text):
 def scrape():
     """Scrapes gifs and tags from reactiongifs.com and stores them in
     database."""
-    page = 1
-    url_prefix = "http://www.reactiongifs.com/page/"
-    response = requests.get(url_prefix + str(page))
-    content = response.content
-    soup = BeautifulSoup(content)
-    posts = soup.find_all(class_="post")
-    for post in posts:
-        post_url = post.find(class_="post-author").input["value"]
-        image_url = post.find(class_="middle").find(class_="entry").a["href"]
-        title = post.find(class_="middle").find(class_="title").a["title"]
-        tags = post.find(class_="post-category").text[6:].split(', ')
-        db_interface.store_image(image_url, post_url, title, tags)
+    for page in range(500):
+        print 'Scraping page', page, '...'
+        url_prefix = "http://www.reactiongifs.com/page/"
+        response = requests.get(url_prefix + str(page))
+        content = response.content
+        soup = BeautifulSoup(content)
+        posts = soup.find_all(class_="post")
+        for post in posts:
+            post_url = post.find(class_="post-author").input["value"]
+            image_url = post.find(class_="middle").find(class_="entry").a["href"]
+            title = post.find(class_="middle").find(class_="title").a["title"]
+            tags = post.find(class_="post-category").text[6:].split(', ')
+            db_interface.store_image(image_url, post_url, title, tags)
+        time.sleep(5)           # Make sure reactiongifs.com doesn't hate us :)
 
 
 if __name__ == '__main__':
