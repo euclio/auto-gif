@@ -146,7 +146,7 @@ def classify_new(model, input_threads):
 
     comment_topics = []
 
-    for topics_weights, comment in sorted_weighted[:NUM_COMMENTS]:
+    for topics_weights, comment in sorted_weighted:
         best_topic, best_weight = topics_weights[0]
         topics = model.show_topics(topics=-1, formatted=False)[best_topic]
         comment_topics.append((comment, topics))
@@ -220,12 +220,13 @@ def respond_with_gif(comment, topics):
             break
     else:
         print "No suitable images found."
-        return
+        return False
     image = images[0]
     print comment
     print current_topic
     print image
     reply_to_comment(comment, image.image_url)
+    return True
 
 
 def respond_with_random_gif(comment):
@@ -248,13 +249,20 @@ if __name__ == '__main__':
     model = models.ldamodel.LdaModel.load(name + '.lda')
     recent_threads = recent_threads(20)
     threads_and_topics = classify_new(model, recent_threads)
+    num_gifs_posted = 0
     for idx, thread_and_topics in enumerate(threads_and_topics):
+        did_post_gif = False
         thread, weights_topics = thread_and_topics
         topics = [topic for weight, topic in weights_topics]
         if idx % 2 == 0:
             print 'Posting relevant gif.'
-            respond_with_gif(thread[-1], topics)
+            did_post_gif = respond_with_gif(thread[-1], topics)
         else:
             print 'Posting random gif.'
             respond_with_random_gif(thread[-1])
-        time.sleep(660)         # Avoid reddit spam filtering
+            did_post_gif = True
+        if did_post_gif:
+            num_gifs_posted += 1
+            time.sleep(660)         # Avoid reddit spam filtering
+        if num_gifs_posted >= NUM_COMMENTS:
+            break
