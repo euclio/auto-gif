@@ -254,7 +254,7 @@ if __name__ == '__main__':
         did_post_gif = False
         thread, weights_topics = thread_and_topics
         topics = [topic for weight, topic in weights_topics]
-        if idx % 2 == 0:
+        if num_gifs_posted % 2 == 0:
             print 'Posting relevant gif.'
             did_post_gif = respond_with_gif(thread[-1], topics)
         else:
