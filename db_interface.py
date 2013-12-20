@@ -1,4 +1,6 @@
-from pony.orm import Database, Required, Set, commit, db_session
+
+from random import randint
+from pony.orm import Database, Required, Set, commit, db_session, count
 
 db = Database('sqlite', 'database.sqlite', create_db=True)
 
@@ -35,5 +37,14 @@ def get_images_for_tag(tag):
         if len(images) > 0:
             results.append(images[0])
     return results
+
+
+@db_session
+def get_random_image():
+    num_images = count(i for i in Image)
+    random = randint(1, num_images)
+    results = db.select("* from Image where id = $image_id",
+                        {"image_id": random})
+    return results[0]
 
 db.generate_mapping(create_tables=True)
