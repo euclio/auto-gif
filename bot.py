@@ -185,11 +185,10 @@ def scrape():
 
 if __name__ == '__main__':
     #scrape()
-    number = 200
+    number = 1000
     name = 'top'+ str(number)
     #reddit_corpus(name, reddit_threads(number))
     #model = LDA_model(name, 100)
     model = models.ldamodel.LdaModel.load(name + '.lda')
     recent_threads = recent_threads(20)
     classify_new(model, recent_threads)
-
