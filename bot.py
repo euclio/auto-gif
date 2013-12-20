@@ -248,7 +248,8 @@ if __name__ == '__main__':
     model = models.ldamodel.LdaModel.load(name + '.lda')
     recent_threads = recent_threads(20)
     threads_and_topics = classify_new(model, recent_threads)
-    for idx, thread, weights_topics in enumerate(threads_and_topics):
+    for idx, thread_and_topics in enumerate(threads_and_topics):
+        thread, weights_topics = thread_and_topics
         topics = [topic for weight, topic in weights_topics]
         if idx % 2 == 0:
             print 'Posting relevant gif.'
