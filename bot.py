@@ -152,14 +152,14 @@ def classify_new(model, input_threads):
     return comment_topics
 
 
-def LDA_model(name, number):
+def LDA_model(name, number, passes=10):
     """Create an LDA model from saved corpus and dictionary."""
     corpus = corpora.MmCorpus(name + '.mm')
     print corpus
     dictionary = corpora.Dictionary.load(name + '.dict')
     print dictionary
     model = models.ldamodel.LdaModel(corpus=corpus, id2word=dictionary,
-                                     num_topics=number, passes=10)
+                                     num_topics=number, passes=passes)
     model.save(name + '.lda')
     print model
     for topic in model.show_topics(topics=-1):
@@ -218,18 +218,19 @@ def respond_with_gif(comment, topics):
         print "No suitable images found."
         return
     image = images[0]
-    print image.url
+    print image.image.image_url
     #comment.reply('[relevant GIF]({})'.format(image.url))
 
 
 if __name__ == '__main__':
     #scrape()
-    number = 1000
+    number = 100
     name = 'top' + str(number)
     #reddit_corpus(name, reddit_threads(number))
     #model = LDA_model(name, 100)
     model = models.ldamodel.LdaModel.load(name + '.lda')
-    recent_threads = recent_threads(20)
+    recent_threads = recent_threads(1)
     comments_and_topics = classify_new(model, recent_threads)
-    for comment, topics in comments_and_topics:
+    for comment, weights_topics in comments_and_topics:
+        topics = [topic for weight, topic in weights_topics]
         respond_with_gif(comment, topics)
