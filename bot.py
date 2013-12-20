@@ -240,15 +240,16 @@ def reply_to_comment(comment, image_url):
     r._add_comment(comment[1], '[relevant GIF]({})'.format(image_url))
 
 
-if __name__ == '__main__':
-    #scrape()
-    number = 1000
+def train(number):
     name = 'top' + str(number)
-    #reddit_corpus(name, reddit_threads(number))
-    #model = LDA_model(name, 100)
-    model = models.ldamodel.LdaModel.load(name + '.lda')
-    recent_threads = recent_threads(20)
-    threads_and_topics = classify_new(model, recent_threads)
+    reddit_corpus(name, reddit_threads(number))
+    model = LDA_model(name, 100)
+    return model
+
+
+def post_with_model(model):
+    recents = recent_threads(20)
+    threads_and_topics = classify_new(model, recents)
     num_gifs_posted = 0
     for idx, thread_and_topics in enumerate(threads_and_topics):
         did_post_gif = False
@@ -266,3 +267,29 @@ if __name__ == '__main__':
             time.sleep(660)         # Avoid reddit spam filtering
         if num_gifs_posted >= NUM_COMMENTS:
             break
+
+
+def evaluate():
+    user = r.get_redditor(os.environ['BOT_USERNAME'])
+    comments = list(user.get_comments(limit=None))
+    comments = sorted(comments, key=lambda c: c.created)
+    relevant = [c for i, c in enumerate(comments) if i % 2 == 0]
+    random = [c for i, c in enumerate(comments) if i % 2 == 1]
+    print "Relevant:"
+    for c in relevant:
+        print c.score, c.body
+    print "Random:"
+    for c in random:
+        print c.score, c.body
+    print "Mean relevant:", sum([c.score for c in relevant])*1.0/len(relevant)
+    print "Mean random:", sum([c.score for c in random])*1.0/len(random)
+
+
+if __name__ == '__main__':
+    #scrape()
+    #number = 1000
+    #name = 'top' + str(number)
+    #model = train(number)
+    #model = models.ldamodel.LdaModel.load(name + '.lda')
+    #test(model)
+    evaluate()
