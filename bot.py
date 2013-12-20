@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
-from itertools import chain, takewhile
+from itertools import chain
 import os
 import re
 import time
 
 from bs4 import BeautifulSoup
-from gensim import corpora, models, similarities
+from gensim import corpora, models
 from markdown import markdown
 import praw
 import requests
@@ -13,8 +13,8 @@ from stemming.porter2 import stem
 
 import db_interface
 
-r = praw.Reddit(user_agent='Auto-gif: Attempts to respond to comments with relevant '
-                'reaction gifs')
+r = praw.Reddit(user_agent='Auto-gif: Attempts to respond to comments with '
+                'relevant reaction gifs')
 
 
 def login():
