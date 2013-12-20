@@ -39,7 +39,7 @@ def reddit_threads(number):
 
     def days_old(story):
         '''Return true if story is at least two days old.'''
-        story_created = datetime.fromtimestampe(story.created)
+        story_created = datetime.fromtimestamp(story.created)
         return datetime.now() - story_created > timedelta(days=2)
 
     login()
