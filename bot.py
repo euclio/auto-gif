@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from itertools import chain, takewhile
+from itertools import chain, takewhile, islice
 import os
 import re
 import time
@@ -44,14 +44,14 @@ def reddit_threads(number):
     login()
     subr = r.get_subreddit('funny')
     all_threads = []
-    generator = (story for story in subr.get_top_from_all(limit=None) if days_old(story))
-    for story in (next(generator) for i in xrange(number)):
+    top_stories = (story for story in subr.get_top_from_all(limit=None) if days_old(story))
+    for story in islice(top_stories, 20):
         comments = story.comments
         print story
         print len(comments)
         story_threads = [comment_descendants(comment) for comment in comments if type(comment) is praw.objects.Comment]
         all_threads = chain(all_threads, story_threads)
-    return all_threads  
+    return all_threads
 
 
 def recent_threads(number):
@@ -74,7 +74,7 @@ def recent_threads(number):
         print len(comments)
         story_threads = [comment_descendants(comment) for comment in comments if type(comment) is praw.objects.Comment and comment.ups > 5]
         all_threads = chain(all_threads, story_threads)
-    return all_threads  
+    return all_threads
 
 
 def thread_words(thread):
@@ -122,10 +122,10 @@ def classify_new(model, input_threads):
     weighted = []
     for processed, raw in zip(threads, input_threads):
         # sort the topics for this thread by weight
-        topics_weights = sorted(model[dictionary.doc2bow(processed)], key = lambda x: -x[1])
+        topics_weights = sorted(model[dictionary.doc2bow(processed)], key=lambda x: -x[1])
         weighted.append((topics_weights, raw))
 
-    sorted_weighted = sorted(weighted, key = lambda x: -x[0][0][1])
+    sorted_weighted = sorted(weighted, key=lambda x: -x[0][0][1])
 
     for topics_weights, comment in sorted_weighted[:3]:
         best_topic, best_weight = topics_weights[0]
@@ -156,9 +156,7 @@ def comment_descendants(comment):
            and comment.replies[0].ups - comment.replies[0].downs > 1):
         comment = comment.replies[0]
         descendants.append((strip_markdown(comment.body), comment.name))
-    return descendants
-
-
+    return descendants 
 def strip_markdown(text):
     """Remove markdown formatting on reddit comments."""
     html = markdown(text)
