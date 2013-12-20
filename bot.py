@@ -16,6 +16,8 @@ import db_interface
 r = praw.Reddit(user_agent='Auto-gif: Attempts to respond to comments with '
                            'relevant reaction gifs')
 
+NUM_COMMENTS = 20
+
 
 def login():
     """Log in to reddit.
@@ -144,7 +146,7 @@ def classify_new(model, input_threads):
 
     comment_topics = []
 
-    for topics_weights, comment in sorted_weighted[:3]:
+    for topics_weights, comment in sorted_weighted[:NUM_COMMENTS]:
         best_topic, best_weight = topics_weights[0]
         topics = model.show_topics(topics=-1, formatted=False)[best_topic]
         comment_topics.append((comment, topics))
@@ -223,7 +225,15 @@ def respond_with_gif(comment, topics):
     print comment
     print current_topic
     print image
-    #comment.reply('[relevant GIF]({})'.format(image.url))
+    reply_to_comment(comment, image.image_url)
+
+def respond_with_random_gif(comment):
+    image = db_interface.get_random_image()
+    reply_to_comment(comment, image.image_url)
+
+
+def reply_to_comment(comment, image_url):
+    r._add_comment(comment[1], '[relevant GIF]({})'.format(image_url))
 
 
 if __name__ == '__main__':
@@ -235,6 +245,10 @@ if __name__ == '__main__':
     model = models.ldamodel.LdaModel.load(name + '.lda')
     recent_threads = recent_threads(1)
     threads_and_topics = classify_new(model, recent_threads)
-    for thread, weights_topics in threads_and_topics:
+    for idx, thread, weights_topics in enumerate(threads_and_topics):
         topics = [topic for weight, topic in weights_topics]
-        respond_with_gif(thread[-1], topics)
+        if idx % 2 == 0:
+            respond_with_gif(thread[-1], topics)
+        else:
+            respond_with_random_gif(thread[-1])
+        time.sleep(660)         # Avoid reddit spam filtering
