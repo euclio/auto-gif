@@ -13,8 +13,8 @@ from stemming.porter2 import stem
 
 import db_interface
 
-r = praw.Reddit(user_agent='Auto-gif: Attempts to respond to comments with relevant '
-                'reaction gifs')
+r = praw.Reddit(user_agent='Auto-gif: Attempts to respond to comments with '
+                           'relevant reaction gifs')
 
 
 def login():
@@ -39,17 +39,20 @@ def reddit_threads(number):
 
     def days_old(story):
         '''Return true if story is at least two days old.'''
-        return datetime.now() - datetime.fromtimestamp(story.created) > timedelta(days=2)
+        story_created = datetime.fromtimestampe(story.created)
+        return datetime.now() - story_created > timedelta(days=2)
 
     login()
     subr = r.get_subreddit('funny')
     all_threads = []
-    top_stories = (story for story in subr.get_top_from_all(limit=None) if days_old(story))
-    for story in islice(top_stories, 20):
+    top_stories = (story for story in subr.get_top_from_all(limit=None)
+                   if days_old(story))
+    for story in islice(top_stories, number):
         comments = story.comments
         print story
         print len(comments)
-        story_threads = [comment_descendants(comment) for comment in comments if type(comment) is praw.objects.Comment]
+        story_threads = [comment_descendants(comment) for comment in comments
+                         if type(comment) is praw.objects.Comment]
         all_threads = chain(all_threads, story_threads)
     return all_threads
 
@@ -62,17 +65,21 @@ def recent_threads(number):
 
     def hours_old(story):
         '''Return true if story is under six hours old.'''
-        return datetime.now() - datetime.fromtimestamp(story.created) < timedelta(hours=6)
+        story_created = datetime.fromtimestamp(story.created)
+        return datetime.now() - story_created < timedelta(hours=6)
 
     login()
     subr = r.get_subreddit('funny')
     all_threads = []
-    generator = (story for story in subr.get_top(limit=None) if hours_old(story))
-    for story in (next(generator) for i in xrange(number)):
+    top_stories = (story for story in subr.get_top(limit=None)
+                 if hours_old(story))
+    for story in islice(top_stories, number):
         comments = story.comments
         print story
         print len(comments)
-        story_threads = [comment_descendants(comment) for comment in comments if type(comment) is praw.objects.Comment and comment.ups > 5]
+        story_threads = [comment_descendants(comment) for comment in comments
+                         if type(comment) is praw.objects.Comment
+                         and comment.ups > 5]
         all_threads = chain(all_threads, story_threads)
     return all_threads
 
@@ -93,7 +100,8 @@ def reddit_corpus(name, training_threads):
 
     threads = [thread_words(thread) for thread in training_threads]
     dictionary = corpora.Dictionary(threads)
-    unique_id = [word for word, count in dictionary.dfs.iteritems() if count == 1]
+    unique_id = [word for word, count in dictionary.dfs.iteritems()
+                 if count == 1]
     common_id = []
     with open('common_words.txt') as f:
         for line in f.readlines():
@@ -110,10 +118,16 @@ def reddit_corpus(name, training_threads):
 
 
 def classify_new(model, input_threads):
-    """Test a set of new reddit threads with an LDA model and find the comment with the best match."""
+    """Test a set of new reddit threads with an LDA model and find the comment
+    with the best match."""
 
-    # leave out threads with under 50 characters
-    input_threads = [thread for thread in input_threads if reduce(lambda x,y: x + len(y[0]), thread, 0) > 100]
+    # Return the total length of the comments in a thread
+    def thread_length(thread):
+        return reduce(lambda x,y: x + len(y[0]), thread, 0)
+
+    # leave out threads with under 100 characters
+    input_threads = [thread for thread in input_threads
+                     if thread_length(thread) > 100]
 
     threads = [thread_words(thread) for thread in input_threads]
 
@@ -122,8 +136,9 @@ def classify_new(model, input_threads):
     weighted = []
     for processed, raw in zip(threads, input_threads):
         # sort the topics for this thread by weight
-        topics_weights = sorted(model[dictionary.doc2bow(processed)], key=lambda x: -x[1])
-        weighted.append((topics_weights, raw))
+        topics = model[dictionary.doc2bow(processed)]
+        topics_by_weight = sorted(topics, key=lambda x: -x[1])
+        weighted.append((topics_by_weight, raw))
 
     sorted_weighted = sorted(weighted, key=lambda x: -x[0][0][1])
 
@@ -139,7 +154,8 @@ def LDA_model(name, number):
     print corpus
     dictionary = corpora.Dictionary.load(name + '.dict')
     print dictionary
-    model = models.ldamodel.LdaModel(corpus=corpus, id2word=dictionary, num_topics=number, passes=10)
+    model = models.ldamodel.LdaModel(corpus=corpus, id2word=dictionary,
+                                     num_topics=number, passes=10)
     model.save(name + '.lda')
     print model
     for topic in model.show_topics(topics=-1):
@@ -175,8 +191,12 @@ def scrape():
         posts = soup.find_all(class_="post")
         for post in posts:
             post_url = post.find(class_="post-author").input["value"]
-            image_url = post.find(class_="middle").find(class_="entry").a["href"]
-            title = post.find(class_="middle").find(class_="title").a["title"]
+            image_url = (post.find(class_="middle")
+                             .find(class_="entry")
+                             .a["href"])
+            title = (post.find(class_="middle")
+                         .find(class_="title")
+                         .a["title"])
             tags = post.find(class_="post-category").text[6:].split(', ')
             db_interface.store_image(image_url, post_url, title, tags)
         time.sleep(5)           # Make sure reactiongifs.com doesn't hate us :)
