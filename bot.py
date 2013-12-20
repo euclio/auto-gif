@@ -218,7 +218,7 @@ def respond_with_gif(comment, topics):
         print "No suitable images found."
         return
     image = images[0]
-    print image.image.image_url
+    print image
     #comment.reply('[relevant GIF]({})'.format(image.url))
 
 

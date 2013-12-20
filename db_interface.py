@@ -26,8 +26,14 @@ def store_image(image_url, post_url, title, tags):
 
 @db_session
 def get_images_for_tag(tag):
-    result = db.select("* from ImageTag where tag = $query_tag",
-                       {"query_tag": tag})
-    return result
+    image_tags = db.select("* from ImageTag where tag = $query_tag",
+                           {"query_tag": tag})
+    results = []
+    for image_tag in image_tags:
+        images = db.select("* from Image where id = $image_id",
+                           {"image_id": image_tag.id})
+        if len(images) > 0:
+            results.append(images[0])
+    return results
 
 db.generate_mapping(create_tables=True)
