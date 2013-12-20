@@ -10,7 +10,7 @@ from gensim import corpora, models, similarities
 from stemming.porter2 import stem
 from markdown import markdown
 from datetime import datetime, timedelta
-from itertools import chain
+from itertools import chain, takewhile
 
 r = praw.Reddit(user_agent='Auto-gif: Attempts to respond to comments with relevant '
                 'reaction gifs')
@@ -43,7 +43,8 @@ def reddit_threads(number):
     login()
     subr = r.get_subreddit('funny')
     all_threads = []
-    for story in filter(days_old, subr.get_top_from_all(limit=number)):
+    generator = (story for story in subr.get_top_from_all(limit=None) if days_old(story))
+    for story in (next(generator) for i in xrange(number)):
         comments = story.comments
         print story
         print len(comments)
@@ -65,7 +66,8 @@ def recent_threads(number):
     login()
     subr = r.get_subreddit('funny')
     all_threads = []
-    for story in filter(hours_old, subr.get_top(limit=number)):
+    generator = (story for story in subr.get_top(limit=None) if hours_old(story))
+    for story in (next(generator) for i in xrange(number)):
         comments = story.comments
         print story
         print len(comments)
@@ -76,7 +78,7 @@ def recent_threads(number):
 
 def thread_words(thread):
     """Get the words from a list of comments."""
-    
+
     text = ''
     for comment in thread:
         # Remove punctuation
@@ -127,7 +129,7 @@ def classify_new(model, input_threads):
     for topics_weights, comment in sorted_weighted[:3]:
         best_topic, best_weight = topics_weights[0]
         print best_topic, best_weight, comment
-        print model.show_topics(topics=-1)[best_topic]
+        print model.show_topics(topics=-1, formatted=False)[best_topic]
 
 
 def LDA_model(name, number):
@@ -188,6 +190,6 @@ if __name__ == '__main__':
     #reddit_corpus(name, reddit_threads(number))
     #model = LDA_model(name, 100)
     model = models.ldamodel.LdaModel.load(name + '.lda')
-    recent_threads = recent_threads(1)
+    recent_threads = recent_threads(20)
     classify_new(model, recent_threads)
 
