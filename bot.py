@@ -42,7 +42,7 @@ def reddit_threads(number):
     def days_old(story):
         '''Return true if story is at least two days old.'''
         story_created = datetime.fromtimestamp(story.created)
-        return datetime.now() - story_created > timedelta(days=2)
+        return datetime.utcnow() - story_created > timedelta(days=2)
 
     login()
     subr = r.get_subreddit('funny')
@@ -68,7 +68,7 @@ def recent_threads(number):
     def hours_old(story):
         '''Return true if story is under six hours old.'''
         story_created = datetime.fromtimestamp(story.created)
-        return datetime.now() - story_created < timedelta(hours=6)
+        return datetime.utcnow() - story_created < timedelta(hours=6)
 
     login()
     subr = r.get_subreddit('funny')
@@ -255,10 +255,10 @@ if __name__ == '__main__':
         thread, weights_topics = thread_and_topics
         topics = [topic for weight, topic in weights_topics]
         if num_gifs_posted % 2 == 0:
-            print 'Posting relevant gif.'
+            print num_gifs_posted, 'Posting relevant gif.'
             did_post_gif = respond_with_gif(thread[-1], topics)
         else:
-            print 'Posting random gif.'
+            print num_gifs_posted, 'Posting random gif.'
             respond_with_random_gif(thread[-1])
             did_post_gif = True
         if did_post_gif:
