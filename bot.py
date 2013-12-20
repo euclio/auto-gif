@@ -227,8 +227,11 @@ def respond_with_gif(comment, topics):
     print image
     reply_to_comment(comment, image.image_url)
 
+
 def respond_with_random_gif(comment):
     image = db_interface.get_random_image()
+    print comment
+    print image
     reply_to_comment(comment, image.image_url)
 
 
@@ -238,17 +241,19 @@ def reply_to_comment(comment, image_url):
 
 if __name__ == '__main__':
     #scrape()
-    number = 100
+    number = 1000
     name = 'top' + str(number)
     #reddit_corpus(name, reddit_threads(number))
     #model = LDA_model(name, 100)
     model = models.ldamodel.LdaModel.load(name + '.lda')
-    recent_threads = recent_threads(1)
+    recent_threads = recent_threads(20)
     threads_and_topics = classify_new(model, recent_threads)
     for idx, thread, weights_topics in enumerate(threads_and_topics):
         topics = [topic for weight, topic in weights_topics]
         if idx % 2 == 0:
+            print 'Posting relevant gif.'
             respond_with_gif(thread[-1], topics)
         else:
+            print 'Posting random gif.'
             respond_with_random_gif(thread[-1])
         time.sleep(660)         # Avoid reddit spam filtering
