@@ -210,14 +210,18 @@ def scrape():
 
 def respond_with_gif(comment, topics):
     images = []
+    current_topic = None
     for topic in topics:
         images = db_interface.get_images_for_tag(topic)
+        current_topic = topic
         if images:
             break
     else:
         print "No suitable images found."
         return
     image = images[0]
+    print comment
+    print current_topic
     print image
     #comment.reply('[relevant GIF]({})'.format(image.url))
 
@@ -230,7 +234,7 @@ if __name__ == '__main__':
     #model = LDA_model(name, 100)
     model = models.ldamodel.LdaModel.load(name + '.lda')
     recent_threads = recent_threads(1)
-    comments_and_topics = classify_new(model, recent_threads)
-    for comment, weights_topics in comments_and_topics:
+    threads_and_topics = classify_new(model, recent_threads)
+    for thread, weights_topics in threads_and_topics:
         topics = [topic for weight, topic in weights_topics]
-        respond_with_gif(comment, topics)
+        respond_with_gif(thread[-1], topics)
