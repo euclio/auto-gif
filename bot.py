@@ -83,7 +83,7 @@ def thread_words(thread):
     text = ''
     for comment in thread:
         # Remove punctuation
-        comment = re.sub('[!.:?,;"]', '', comment[0])
+        comment = re.sub('[!.:?,;|"]', '', comment[0])
         text += comment
     return [stem(word) for word in text.lower().split()]
 
@@ -193,4 +193,3 @@ if __name__ == '__main__':
     model = models.ldamodel.LdaModel.load(name + '.lda')
     recent_threads = recent_threads(20)
     classify_new(model, recent_threads)
-
