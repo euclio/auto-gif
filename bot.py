@@ -1,16 +1,17 @@
+from datetime import datetime, timedelta
+from itertools import chain, takewhile
 import os
 import re
 import time
 
-import praw
-import requests
-import db_interface
 from bs4 import BeautifulSoup
 from gensim import corpora, models, similarities
-from stemming.porter2 import stem
 from markdown import markdown
-from datetime import datetime, timedelta
-from itertools import chain, takewhile
+import praw
+import requests
+from stemming.porter2 import stem
+
+import db_interface
 
 r = praw.Reddit(user_agent='Auto-gif: Attempts to respond to comments with relevant '
                 'reaction gifs')
@@ -82,7 +83,7 @@ def thread_words(thread):
     text = ''
     for comment in thread:
         # Remove punctuation
-        comment = re.sub('[!.:?,;"]', '', comment[0])
+        comment = re.sub('[!.:?,;|"]', '', comment[0])
         text += comment
     return [stem(word) for word in text.lower().split()]
 
@@ -181,6 +182,20 @@ def scrape():
             tags = post.find(class_="post-category").text[6:].split(', ')
             db_interface.store_image(image_url, post_url, title, tags)
         time.sleep(5)           # Make sure reactiongifs.com doesn't hate us :)
+
+
+def respond_with_gif(comment, topics):
+    images = []
+    for topic in topics:
+        images = db_interface.get_images_for_tag(topic)
+        if images:
+            break
+    else:
+        print "No suitable images found."
+        return
+    image = images[0]
+    print image.url
+    #comment.reply('[relevant GIF]({})'.format(image.url))
 
 
 if __name__ == '__main__':
