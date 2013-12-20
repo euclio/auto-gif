@@ -184,6 +184,20 @@ def scrape():
         time.sleep(5)           # Make sure reactiongifs.com doesn't hate us :)
 
 
+def respond_with_gif(comment, topics):
+    images = []
+    for topic in topics:
+        images = db_interface.get_images_for_tag(topic)
+        if images:
+            break
+    else:
+        print "No suitable images found."
+        return
+    image = images[0]
+    print image.url
+    #comment.reply('[relevant GIF]({})'.format(image.url))
+
+
 if __name__ == '__main__':
     #scrape()
     number = 200
