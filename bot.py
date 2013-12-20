@@ -142,10 +142,14 @@ def classify_new(model, input_threads):
 
     sorted_weighted = sorted(weighted, key=lambda x: -x[0][0][1])
 
+    comment_topics = []
+
     for topics_weights, comment in sorted_weighted[:3]:
         best_topic, best_weight = topics_weights[0]
-        print best_topic, best_weight, comment
-        print model.show_topics(topics=-1, formatted=False)[best_topic]
+        topics = model.show_topics(topics=-1, formatted=False)[best_topic]
+        comment_topics.append((comment, topics))
+
+    return comment_topics
 
 
 def LDA_model(name, number):
@@ -226,4 +230,6 @@ if __name__ == '__main__':
     #model = LDA_model(name, 100)
     model = models.ldamodel.LdaModel.load(name + '.lda')
     recent_threads = recent_threads(20)
-    classify_new(model, recent_threads)
+    comments_and_topics = classify_new(model, recent_threads)
+    for comment, topics in comments_and_topics:
+        respond_with_gif(comment, topics)
